@@ -1,0 +1,127 @@
+---
+- hosts: all
+  become: yes
+  gather_facts: no
+  vars:
+    ansible_python_interpreter: /usr/bin/python3.6
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install python3-pip package
+      apt:
+        name: python3-pip
+        state: present
+
+    - name: Install virtualenv package
+      apt:
+        name: virtualenv
+        state: present
+
+    - name: Install Dependencies
+      apt:
+        name: ['python3-setuptools', 'python3.7', 'python3.7-venv','python3-pip']
+        state: latest
+        update_cache: yes
+
+    - name: Create a virtual environment called ecs
+      command: virtualenv -p python3.7 /home/proot/ecs
+      args:
+        creates: /home/proot/ecs
+
+    - name: Activate Virtual Enviroment
+      shell: source /home/proot/ecs/bin/activate
+      args:
+        executable: /bin/bash
+
+    - name: Install pip
+      apt:
+        name: python3-pip
+        state: present
+
+    - name: Install setuptools
+      pip:
+        name: setuptools
+        virtualenv: /home/proot/ecs
+
+    - name: Install boto3
+      pip:
+        name: boto3
+        state: present
+        virtualenv: /home/proot/ecs
+
+    - name: COPY SCALING SCRIPTS FOR ECS SERVICE TO THE REMOTE HOST
+      copy:
+        src: scaling_ecs_Services.py
+        dest: /home/proot/scaling_ecs_Services.py
+
+    - name: COPY AUTOSCALING SCRIPTS TO THE REMOTE HOST
+      copy:
+        src: auto_scaling_group_update.py
+        dest: /home/proot/auto_scaling_group_update.py
+
+    - name: Check if directory exists
+      stat:
+        path: ~/.aws
+      register: aws_dir
+
+    - name: Create directory
+      file:
+        path: ~/.aws
+        state: directory
+      when: not aws_dir.stat.exists
+
+    - name: COPY AWS CONFIG file
+      copy:
+        src: awsconfig
+        dest: ~/.aws/config
+
+    - name: ADD CRONJOB FOR MORNING SCHEDULE FOR ECS
+      cron:
+        name: "Morning ecs cronjob"
+        job: "/home/proot/ecs/bin/python3 /home/proot/scaling_ecs_Services.py >> /var/log/ecs_scaling.logs"
+        weekday: "1-5"
+        minute: "50"
+        hour: "6"
+
+    - name: ADD CRONJOB FOR MORNING SCHEDULE FOR AutoScaling
+      cron:
+        name: "Morning Auto-Scaling cronjob"
+        job: "/home/proot/ecs/bin/python3 /home/proot/auto_scaling_group_update.py >> /var/log/ecs_scaling.logs"
+        weekday: "1-5"
+        minute: "45"
+        hour: "6"
+
+    - name: ADD CRONJOB FOR NIGHT SCHEDULE FOR ECS
+      cron:
+        name: "Night ecs cronjob"
+        job: "/home/proot/ecs/bin/python3 /home/proot/scaling_ecs_Services.py >> /var/log/ecs_scaling.logs"
+        weekday: "1-5"
+        minute: "0"
+        hour: "19"
+
+    - name: ADD CRONJOB FOR NIGHT SCHEDULE FOR AutoScaling
+      cron:
+        name: "Night Auto-Scaling job"
+        job: "/home/proot/ecs/bin/python3 /home/proot/auto_scaling_group_update.py >> /var/log/ecs_scaling.logs"
+        weekday: "1-5"
+        minute: "10"
+        hour: "19"
+
+    - name: ADD CRONJOB TO DELETE THE SCALING LOGS AT THE END OF THE WEEK
+      cron:
+        name: "CronJOB to delete the scaling logs"
+        job: "echo '' > /var/log/ecs_scaling.logs"
+        weekday: "6"
+        minute: "0"
+        hour: "6"
+
+    - name: Run command and capture output
+      shell: aws sts get-caller-identity
+      register: command_output
+
+
+    - name: Print command output
+      debug:
+        var: command_output.stdout

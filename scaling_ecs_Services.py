@@ -28,10 +28,8 @@ def filter_client_id_cloudformation(cloudformation,data):
     #pattern=r"^ecs-[a-zA-Z]{6}-pd$"
     response = cloudformation.list_stacks()
     for i in range(len(response["StackSummaries"])):
-        if re.search(pattern, response["StackSummaries"][i]["StackName"]):
-            #print(response["StackSummaries"][i]["StackName"])    
-            client_id = re.sub(pattern_for_getting_cleintid, "", response["StackSummaries"][i]["StackName"])
-            #print(client_id)
+        if re.search(pattern, response["StackSummaries"][i]["StackName"]):             
+            client_id = re.sub(pattern_for_getting_cleintid, "", response["StackSummaries"][i]["StackName"])          
     return client_id
 
 

@@ -53,7 +53,7 @@
 
     - name: COPY SCALING SCRIPTS FOR ECS SERVICE TO THE REMOTE HOST
       copy:
-        src: scaling_ecs_Services.py
+        src: scaling_ecs_Services-v1.py
         dest: /home/proot/scaling_ecs_Services.py
 
     - name: COPY AUTOSCALING SCRIPTS TO THE REMOTE HOST

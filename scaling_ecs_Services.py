@@ -4,19 +4,19 @@ import re
 
 def filter_environments_from_cloudformation(cloudformation):
     pattern_prefix = "ecs-"
-    pattern_suffix = "-[a-zA-Z]{3}\d$"
+    pattern_suffix = "-[a-zA-Z]{3}\d$" 
     pattern = re.compile(f"^{pattern_prefix}[a-zA-Z]{{6}}{pattern_suffix}")
-
+    
     env = []
     #pattern=r"^ecs-[a-zA-Z]{6}-pd$"
     response = cloudformation.list_stacks()
     for i in range(len(response["StackSummaries"])):
         if re.search(pattern, response["StackSummaries"][i]["StackName"]):
-            #print(response["StackSummaries"][i]["StackName"])
+            #print(response["StackSummaries"][i]["StackName"])    
             env.append(response["StackSummaries"][i]["StackName"][-4:])
             #print(client_id)
-    return env
-
+    return env    
+    
 
 
 def filter_client_id_cloudformation(cloudformation,data):
@@ -29,7 +29,8 @@ def filter_client_id_cloudformation(cloudformation,data):
     response = cloudformation.list_stacks()
     for i in range(len(response["StackSummaries"])):
         if re.search(pattern, response["StackSummaries"][i]["StackName"]):
-            #print(response["StackSummaries"][i]["StackName"])            client_id = re.sub(pattern_for_getting_cleintid, "", response["StackSummaries"][i]["StackName"])
+            #print(response["StackSummaries"][i]["StackName"])    
+            client_id = re.sub(pattern_for_getting_cleintid, "", response["StackSummaries"][i]["StackName"])
             #print(client_id)
     return client_id
 
@@ -70,15 +71,15 @@ def get_paramters_from_cloudformation(cloudformation,data):
         value = parameter['ParameterValue']
         if name == 'TomcatBatchServiceMaxCapacity':
             TomcatBatchServiceMaxCapacity = value
-            data["TomcatBatchServiceMaxCapacity"] = value
+            data["TomcatBatchServiceMaxCapacity"] = value 
         if name == 'TomcatServiceMaxCapacity':
             TomcatServiceMaxCapacity = value
-            data["TomcatServiceMaxCapacity"] = value
+            data["TomcatServiceMaxCapacity"] = value 
         if name == 'FilebeatServiceMinCapacity':
             TomcatServiceMaxCapacity = value
-            data["FilebeatServiceMinCapacity"] = value
-
-    return data
+            data["FilebeatServiceMinCapacity"] = value 
+                    
+    return data  
 
 def update_ecs_service(ecs,data):
     if data["currentTimeschedule"]=="night":
@@ -92,7 +93,7 @@ def update_ecs_service(ecs,data):
         ecs.update_service(cluster=data["cluster-name"],service=data["service-name-2"],desiredCount=int(data["FilebeatServiceMinCapacity"]))
         print("Scaled cluster", data["cluster-name"] , "service " , data["service-name"] ," Container to count", data["TomcatBatchServiceMaxCapacity"])
         print("Scaled cluster", data["cluster-name"] , "service " , data["service-name-2"] ," Container to count", data["FilebeatServiceMinCapacity"])
-
+    
 def update_cloudwatch_alarm(cloudwatch,data):
     cloudwatch_alarm_list_dict = cloudwatch.describe_alarms()
     alarm_list = []
@@ -122,7 +123,7 @@ if __name__ == "__main__":
     profile_name = 'default'
     region_name = 'us-east-2'
     session = boto3.Session(profile_name=profile_name)
-    service_name = 'tomcat-batch-service'
+    service_name = 'tomcat-batch-service' 
     cluster_name = 'arlitx-env1-ecs'
     # Get ECS cluster and its attributes
     ecs = session.client('ecs',region_name=region_name)

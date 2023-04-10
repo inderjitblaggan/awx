@@ -69,6 +69,8 @@
         src: awsconfig
         dest: ~/.aws/config
 
+    - name: Run remote script
+      command: /home/proot/docker-stats-sequence.sh
 
     - name: slurp remote file
       ansible.builtin.slurp:

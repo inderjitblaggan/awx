@@ -66,7 +66,7 @@
 
     - name: COPY AWS CONFIG file
       copy:
-        src: ~/.aws/config
+        src: awsconfig
         dest: ~/.aws/config
 
 

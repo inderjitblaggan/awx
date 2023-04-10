@@ -4,7 +4,7 @@
   gather_facts: no
   vars:
     ansible_python_interpreter: /usr/bin/python3.6
-    remotefile: "/home/proot/docker_stats_output.txt"
+    remotefile: "/home/proot/tomcat_stats_output.txt"
   tasks:
     - name: Update apt cache
       apt:

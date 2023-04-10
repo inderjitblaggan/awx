@@ -1,0 +1,80 @@
+---
+- hosts: all
+  become: yes
+  gather_facts: no
+  vars:
+    ansible_python_interpreter: /usr/bin/python3.6
+    remotefile: "/home/proot/docker_stats_output.txt"
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install python3-pip package
+      apt:
+        name: python3-pip
+        state: present
+
+    - name: Install virtualenv package
+      apt:
+        name: virtualenv
+        state: present
+
+    - name: Install Dependencies
+      apt:
+        name: ['python3-setuptools', 'python3.7', 'python3.7-venv','python3-pip']
+        state: latest
+        update_cache: yes
+
+    - name: Create a virtual environment called ecs
+      command: virtualenv -p python3.7 /home/proot/ecs
+      args:
+        creates: /home/proot/ecs
+
+    - name: Activate Virtual Enviroment
+      shell: source /home/proot/ecs/bin/activate
+      args:
+        executable: /bin/bash
+
+    - name: Install pip
+      apt:
+        name: python3-pip
+        state: present
+
+    - name: Install setuptools
+      pip:
+        name: setuptools
+        virtualenv: /home/proot/ecs
+
+    - name: Install boto3
+      pip:
+        name: boto3
+        state: present
+        virtualenv: /home/proot/ecs
+
+
+    - name: Check if directory exists
+      stat:
+        path: ~/.aws
+      register: aws_dir
+
+    - name: Create directory
+      file:
+        path: ~/.aws
+        state: directory
+      when: not aws_dir.stat.exists
+
+    - name: COPY AWS CONFIG file
+      copy:
+        src: ~/.aws/config
+        dest: ~/.aws/config
+
+
+    - name: slurp remote file
+      ansible.builtin.slurp:
+        src: "{{ remotefile }}"
+      register: slurpfile
+
+    - name: Output file content with formatting
+      debug:
+        msg: "{{ (slurpfile.content | b64decode).splitlines() }}"
